@@ -4,7 +4,7 @@ import { outfitsDir, ensureUploadDirs } from '@/src/lib/uploads';
 import path from 'path';
 import fs from 'fs';
 import { IncomingForm, Files } from 'formidable';
-import { db } from '@/src/lib/db';
+import { queryMany } from '@/src/lib/db';
 import { sendMail } from '@/src/lib/mailer';
 import { formidableShimFromRequestHeaders } from '@/src/lib/formidableShim';
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const full = path.join(outfitsDir, destName);
     fs.writeFileSync(full, Buffer.from(ab));
     try {
-      const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
+      const rows = await queryMany<{ email: string }>(`SELECT email FROM users WHERE email IS NOT NULL`);
       const emails = rows.map(r => r.email).filter(Boolean);
       if (emails.length) {
         await sendMail({
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const full = path.join(outfitsDir, destName);
     fs.copyFileSync(file.filepath, full);
     try {
-      const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
+      const rows = await queryMany<{ email: string }>(`SELECT email FROM users WHERE email IS NOT NULL`);
       const emails = rows.map(r => r.email).filter(Boolean);
       if (emails.length) {
         await sendMail({

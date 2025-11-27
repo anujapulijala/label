@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readSession } from '@/src/lib/session';
-import { db } from '@/src/lib/db';
+import { run } from '@/src/lib/db';
 import { ensureUploadDirs, reviewsDir } from '@/src/lib/uploads';
 import path from 'path';
 import fs from 'fs';
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       filename = `${Date.now()}_${path.basename((file as any).name || 'review.jpg')}`;
       fs.writeFileSync(path.join(reviewsDir, filename), Buffer.from(ab));
     }
-    db.prepare('INSERT INTO reviews (user_id, text, filename) VALUES (?, ?, ?)').run(session.userId, text, filename);
+    await run('INSERT INTO reviews (user_id, text, filename) VALUES (?, ?, ?)', session.userId, text, filename);
     return NextResponse.json({ ok: true });
   } catch {
     const ctype = req.headers.get('content-type') || '';
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       fs.copyFileSync(file.filepath, path.join(reviewsDir, filename));
     }
     const text = String(fields.text || '').slice(0, 2000);
-    db.prepare('INSERT INTO reviews (user_id, text, filename) VALUES (?, ?, ?)').run(session.userId, text, filename);
+    await run('INSERT INTO reviews (user_id, text, filename) VALUES (?, ?, ?)', session.userId, text, filename);
     return NextResponse.json({ ok: true });
   }
 }
