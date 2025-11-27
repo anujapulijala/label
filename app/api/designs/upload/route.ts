@@ -7,6 +7,7 @@ import fs from 'fs';
 import { db } from '@/src/lib/db';
 import { sendMail } from '@/src/lib/mailer';
 import { formidableShimFromRequestHeaders } from '@/src/lib/formidableShim';
+import { cloudEnabled, uploadBufferToCloudinary } from '@/src/lib/cloud';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,8 +24,15 @@ export async function POST(req: NextRequest) {
     if (!file) throw new Error('fallback');
     const arrayBuffer = await (file as unknown as File).arrayBuffer();
     const destName = `${Date.now()}_${path.basename((file as any).name || 'design.jpg')}`;
-    const destPath = path.join(designsUploadDir, destName);
-    fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
+    let url = '';
+    if (cloudEnabled) {
+      const up = await uploadBufferToCloudinary(Buffer.from(arrayBuffer), 'designs', destName);
+      url = up.secure_url;
+    } else {
+      const destPath = path.join(designsUploadDir, destName);
+      fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
+      url = `/api/uploads?type=design&name=${encodeURIComponent(destName)}`;
+    }
     try {
       const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
       const emails = rows.map(r => r.email).filter(Boolean);
@@ -33,11 +41,11 @@ export async function POST(req: NextRequest) {
           to: emails,
           subject: 'New design added',
           html: `<p>A new design has been added to the gallery.</p><p>Visit the gallery to see it, or preview below.</p>`,
-          attachments: [{ filename: destName, path: destPath }]
+          attachments: cloudEnabled ? [] : [{ filename: destName, path: path.join(designsUploadDir, destName) }]
         });
       }
     } catch {}
-    return NextResponse.json({ ok: true, filename: destName, url: `/api/uploads?type=design&name=${encodeURIComponent(destName)}` });
+    return NextResponse.json({ ok: true, filename: destName, url });
   } catch {
     // Fallback to formidable for older clients
     const ctype = req.headers.get('content-type') || '';
@@ -56,8 +64,16 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(file)) file = file[0];
     if (!file || !file.filepath) return NextResponse.json({ error: 'Missing file' }, { status: 400 });
     const destName = `${Date.now()}_${path.basename(file.originalFilename || 'design.jpg')}`;
-    const destPath = path.join(designsUploadDir, destName);
-    fs.copyFileSync(file.filepath, destPath);
+    let url = '';
+    if (cloudEnabled) {
+      const buf = fs.readFileSync(file.filepath);
+      const up = await uploadBufferToCloudinary(buf, 'designs', destName);
+      url = up.secure_url;
+    } else {
+      const destPath = path.join(designsUploadDir, destName);
+      fs.copyFileSync(file.filepath, destPath);
+      url = `/api/uploads?type=design&name=${encodeURIComponent(destName)}`;
+    }
     try {
       const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
       const emails = rows.map(r => r.email).filter(Boolean);
@@ -66,11 +82,11 @@ export async function POST(req: NextRequest) {
           to: emails,
           subject: 'New design added',
           html: `<p>A new design has been added to the gallery.</p><p>Visit the gallery to see it, or preview below.</p>`,
-          attachments: [{ filename: destName, path: destPath }]
+          attachments: cloudEnabled ? [] : [{ filename: destName, path: path.join(designsUploadDir, destName) }]
         });
       }
     } catch {}
-    return NextResponse.json({ ok: true, filename: destName, url: `/api/uploads?type=design&name=${encodeURIComponent(destName)}` });
+    return NextResponse.json({ ok: true, filename: destName, url });
   }
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/src/lib/db';
+import { run } from '@/src/lib/db';
 import { readSession } from '@/src/lib/session';
 
 export async function POST(req: NextRequest) {
@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
   if (!event || !look) {
     return NextResponse.json({ error: 'Event and look are required' }, { status: 400 });
   }
-  const stmt = db.prepare(`INSERT INTO requests (user_id, event, colors, look, material, status) VALUES (?, ?, ?, ?, ?, 'pending')`);
-  const info = stmt.run(session.userId, event || null, color || null, look || null, material || null);
+  const info = await run(`INSERT INTO requests (user_id, event, colors, look, material, status) VALUES (?, ?, ?, ?, ?, 'pending')`,
+    session.userId, event || null, color || null, look || null, material || null);
   return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid) });
 }
 

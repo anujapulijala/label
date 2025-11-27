@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { ensureUploadDirs, outfitsDir } from '@/src/lib/uploads';
+import { cloudEnabled, listFolderFromCloudinary } from '@/src/lib/cloud';
 
 export async function GET() {
   ensureUploadDirs();
@@ -11,11 +12,21 @@ export async function GET() {
   } catch {
     files = [];
   }
-  const items = files.map((f) => ({
+  let items = files.map((f) => ({
     name: path.parse(f).name,
     filename: f,
     url: `/api/uploads?type=outfit&name=${encodeURIComponent(f)}`
   }));
+  if (cloudEnabled) {
+    try {
+      const cloud = await listFolderFromCloudinary('outfits');
+      items = cloud.map((c: any) => ({
+        name: path.parse(c.filename).name,
+        filename: c.public_id,
+        url: c.secure_url
+      }));
+    } catch {}
+  }
   return NextResponse.json({ items });
 }
 

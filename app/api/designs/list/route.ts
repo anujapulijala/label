@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { designsUploadDir, ensureUploadDirs } from '@/src/lib/uploads';
+import { cloudEnabled, listFolderFromCloudinary } from '@/src/lib/cloud';
 
 export async function GET() {
   const designsDir = path.join(process.cwd(), 'designs');
@@ -26,7 +27,7 @@ export async function GET() {
       url: `/api/designs/image?file=${encodeURIComponent(f)}`
     };
   });
-  const up = uploaded.map(f => {
+  let up = uploaded.map(f => {
     const name = path.parse(f).name;
     return {
       name,
@@ -34,6 +35,16 @@ export async function GET() {
       url: `/api/uploads?type=design&name=${encodeURIComponent(f)}`
     };
   });
+  if (cloudEnabled) {
+    try {
+      const cloud = await listFolderFromCloudinary('designs');
+      up = cloud.map((c: any) => ({
+        name: path.parse(c.filename).name,
+        filename: c.public_id,
+        url: c.secure_url
+      }));
+    } catch {}
+  }
   return NextResponse.json({ items: [...up, ...stock] });
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readSession } from '@/src/lib/session';
-import { db } from '@/src/lib/db';
+import { queryOne, run } from '@/src/lib/db';
 import { ensureUploadDirs, sketchesDir } from '@/src/lib/uploads';
 import path from 'path';
 import fs from 'fs';
@@ -27,10 +27,10 @@ export async function POST(req: NextRequest) {
     const destName = `${Date.now()}_${path.basename((file as any).name || 'sketch.png')}`;
     const destPath = path.join(sketchesDir, destName);
     fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
-    db.prepare('INSERT INTO assets (request_id, kind, filename) VALUES (?, ?, ?)').run(requestId, 'sketch', destName);
-    db.prepare("UPDATE requests SET status = 'in_progress' WHERE id = ?").run(requestId);
+    await run('INSERT INTO assets (request_id, kind, filename) VALUES (?, ?, ?)', requestId, 'sketch', destName);
+    await run("UPDATE requests SET status = 'in_progress' WHERE id = ?", requestId);
     try {
-      const reqRow = db.prepare(`SELECT r.*, u.email, u.name FROM requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`).get(requestId) as any;
+      const reqRow = await queryOne<any>(`SELECT r.*, u.email, u.name FROM requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`, requestId);
       if (reqRow?.email) {
         await sendMail({
           to: reqRow.email,
@@ -63,10 +63,10 @@ export async function POST(req: NextRequest) {
     const destName = `${Date.now()}_${path.basename(file.originalFilename || 'sketch.png')}`;
     const destPath = path.join(sketchesDir, destName);
     fs.copyFileSync(file.filepath, destPath);
-    db.prepare('INSERT INTO assets (request_id, kind, filename) VALUES (?, ?, ?)').run(requestId, 'sketch', destName);
-    db.prepare("UPDATE requests SET status = 'in_progress' WHERE id = ?").run(requestId);
+    await run('INSERT INTO assets (request_id, kind, filename) VALUES (?, ?, ?)', requestId, 'sketch', destName);
+    await run("UPDATE requests SET status = 'in_progress' WHERE id = ?", requestId);
     try {
-      const reqRow = db.prepare(`SELECT r.*, u.email, u.name FROM requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`).get(requestId) as any;
+      const reqRow = await queryOne<any>(`SELECT r.*, u.email, u.name FROM requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`, requestId);
       if (reqRow?.email) {
         await sendMail({
           to: reqRow.email,
