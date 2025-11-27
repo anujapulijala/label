@@ -7,8 +7,7 @@
   "/api/designs/list/route": "app/api/designs/list/route.js",
   "/portfolio/page": "app/portfolio/page.js",
   "/api/outfits/list/route": "app/api/outfits/list/route.js",
-  "/request/page": "app/request/page.js",
-  "/my/page": "app/my/page.js",
-  "/api/requests/my/route": "app/api/requests/my/route.js",
+  "/reviews/page": "app/reviews/page.js",
+  "/api/reviews/list/route": "app/api/reviews/list/route.js",
   "/api/auth/logout/route": "app/api/auth/logout/route.js"
 }

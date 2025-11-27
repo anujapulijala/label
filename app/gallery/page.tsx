@@ -30,7 +30,7 @@ export default function GalleryPage() {
       <div className="grid" style={{ marginTop: 16 }}>
         {items.map(d => (
           <div className="card" key={d.filename}>
-            <img src={d.url} alt={d.name} style={{ width: '100%', height: 240, objectFit: 'cover', borderRadius: 8 }} />
+            <img src={d.url} alt={d.name} style={{ width: '100%', height: 'clamp(160px, 28vh, 240px)', objectFit: 'cover', borderRadius: 8 }} />
             <div style={{ marginTop: 8, fontWeight: 600 }}>{d.name}</div>
           </div>
         ))}

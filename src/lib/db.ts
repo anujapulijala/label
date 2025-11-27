@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
 
-const dataDir = path.join(process.cwd(), 'data');
+const storageRoot = process.env.STORAGE_ROOT || process.cwd();
+const dataDir = path.join(storageRoot, 'data');
 const dbPath = path.join(dataDir, 'app.db');
 
 if (!fs.existsSync(dataDir)) {

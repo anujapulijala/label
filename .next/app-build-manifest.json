@@ -26,15 +26,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/portfolio/page.js"
     ],
-    "/request/page": [
+    "/reviews/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/request/page.js"
-    ],
-    "/my/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/my/page.js"
+      "static/chunks/app/reviews/page.js"
     ]
   }
 }

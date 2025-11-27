@@ -107,7 +107,7 @@ export default function AdminRequestDetailPage() {
       </div>
       <div className="grid">
         {assets.map(a => (
-          <img key={a.id} src={`/api/uploads?type=${a.kind === 'sketch' ? 'sketch' : 'ai'}&name=${encodeURIComponent(a.filename)}`} alt={a.kind} style={{ width: '100%', height: 240, objectFit: 'cover', borderRadius: 8 }} />
+          <img key={a.id} src={`/api/uploads?type=${a.kind === 'sketch' ? 'sketch' : 'ai'}&name=${encodeURIComponent(a.filename)}`} alt={a.kind} style={{ width: '100%', height: 'clamp(180px, 30vh, 260px)', objectFit: 'cover', borderRadius: 8 }} />
         ))}
       </div>
       <div className="card" style={{ marginTop: 16 }}>

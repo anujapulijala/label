@@ -11,6 +11,7 @@ export default function Header() {
   const pathname = usePathname();
   // undefined = loading, null = not logged in, object = logged in
   const [me, setMe] = useState<any | null | undefined>(undefined);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     fetch('/api/auth/me', { cache: 'no-store' }).then(r => r.json()).then(d => setMe(d.user ?? null));
   }, []);
@@ -33,7 +34,7 @@ export default function Header() {
         </svg>
         <div className={playfair.className} style={{ fontWeight: 800, letterSpacing: 0.5, fontSize: 18 }}>Anuja Pulijala</div>
       </div>
-      <nav style={{ display: 'flex', gap: 14 }}>
+      <nav className="desktopNav" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
         <Link href="/gallery">Gallery</Link>
         <Link href="/portfolio">Portfolio</Link>
         <Link href="/reviews">Reviews</Link>
@@ -49,9 +50,47 @@ export default function Header() {
           </>
         ) : null}
       </nav>
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-        <AuthNav />
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button className="mobileMenuButton" aria-label="Open menu" onClick={() => setOpen(true)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="#555" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+        <div className="authDesktop">
+          <AuthNav />
+        </div>
       </div>
+      <div className={`drawerBackdrop ${open ? 'open' : ''}`} onClick={() => setOpen(false)} />
+      <aside className={`drawer ${open ? 'open' : ''}`} aria-hidden={!open} role="dialog" aria-label="Navigation">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div className={playfair.className} style={{ fontWeight: 800 }}>Menu</div>
+          <button onClick={() => setOpen(false)} aria-label="Close menu" style={{ background: 'transparent', border: 'none' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" stroke="#555" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+        <div style={{ display: 'grid' }}>
+          <Link href="/gallery" onClick={() => setOpen(false)}>Gallery</Link>
+          <Link href="/portfolio" onClick={() => setOpen(false)}>Portfolio</Link>
+          <Link href="/reviews" onClick={() => setOpen(false)}>Reviews</Link>
+          {me && me.isAdmin ? (
+            <>
+              <Link href="/admin/requests" onClick={() => setOpen(false)}>User Requests</Link>
+              <Link href="/admin/designs" onClick={() => setOpen(false)}>Designs</Link>
+            </>
+          ) : me ? (
+            <>
+              <Link href="/request" onClick={() => setOpen(false)}>New Request</Link>
+              <Link href="/my" onClick={() => setOpen(false)}>My Requests</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login" onClick={() => setOpen(false)}>Login</Link>
+              <Link href="/signup" onClick={() => setOpen(false)}>Sign up</Link>
+            </>
+          )}
+        </div>
+        <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+          <AuthNav />
+        </div>
+      </aside>
     </header>
   );
 }

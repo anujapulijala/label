@@ -49,7 +49,7 @@ export default function PortfolioPage() {
       <div className="grid">
         {items.map(it => (
           <div key={it.filename} className="card">
-            <img src={it.url} alt={it.name} style={{ width: '100%', height: 240, objectFit: 'cover', borderRadius: 8 }} />
+            <img src={it.url} alt={it.name} style={{ width: '100%', height: 'clamp(160px, 28vh, 240px)', objectFit: 'cover', borderRadius: 8 }} />
             {me?.isAdmin && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
                 <button onClick={() => remove(it.filename)} style={{ background: '#fef2f2', color: '#b91c1c' }}>Delete</button>

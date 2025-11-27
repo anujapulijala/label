@@ -85,7 +85,7 @@ export default function MyRequestDetailPage() {
       </div>
       <div className="grid" style={{ marginBottom: 16 }}>
         {assets.map(a => (
-          <img key={a.id} src={`/api/uploads?type=${a.kind === 'sketch' ? 'sketch' : 'ai'}&name=${encodeURIComponent(a.filename)}`} alt={a.kind} style={{ width: '100%', height: 300, objectFit: 'cover', borderRadius: 10 }} />
+          <img key={a.id} src={`/api/uploads?type=${a.kind === 'sketch' ? 'sketch' : 'ai'}&name=${encodeURIComponent(a.filename)}`} alt={a.kind} style={{ width: '100%', height: 'clamp(200px, 35vh, 320px)', objectFit: 'cover', borderRadius: 10 }} />
         ))}
       </div>
       <div>

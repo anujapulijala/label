@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-export const uploadsRoot = path.join(process.cwd(), 'uploads');
+const storageRoot = process.env.STORAGE_ROOT || process.cwd();
+export const uploadsRoot = path.join(storageRoot, 'uploads');
 export const sketchesDir = path.join(uploadsRoot, 'sketches');
 export const aiDir = path.join(uploadsRoot, 'ai');
 export const designsUploadDir = path.join(uploadsRoot, 'designs');
