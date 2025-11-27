@@ -1,0 +1,16 @@
+{
+  "/page": "app/page.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/login/page": "app/login/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/gallery/page": "app/gallery/page.js",
+  "/api/designs/list/route": "app/api/designs/list/route.js",
+  "/api/uploads/route": "app/api/uploads/route.js",
+  "/reviews/page": "app/reviews/page.js",
+  "/api/reviews/list/route": "app/api/reviews/list/route.js",
+  "/api/reviews/add/route": "app/api/reviews/add/route.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/portfolio/page": "app/portfolio/page.js",
+  "/api/outfits/list/route": "app/api/outfits/list/route.js",
+  "/admin/designs/page": "app/admin/designs/page.js"
+}
