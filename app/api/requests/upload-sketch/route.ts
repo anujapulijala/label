@@ -5,6 +5,7 @@ import { ensureUploadDirs, sketchesDir } from '@/src/lib/uploads';
 import path from 'path';
 import fs from 'fs';
 import { IncomingForm, Files } from 'formidable';
+import { sendMail } from '@/src/lib/mailer';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,17 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
     db.prepare('INSERT INTO assets (request_id, kind, filename) VALUES (?, ?, ?)').run(requestId, 'sketch', destName);
     db.prepare("UPDATE requests SET status = 'in_progress' WHERE id = ?").run(requestId);
+    try {
+      const reqRow = db.prepare(`SELECT r.*, u.email, u.name FROM requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`).get(requestId) as any;
+      if (reqRow?.email) {
+        await sendMail({
+          to: reqRow.email,
+          subject: `Your request #${requestId} is now In Progress`,
+          html: `<p>Hi ${reqRow.name || ''},</p><p>Your request <b>#${requestId}</b> is now <b>In Progress</b>. I've uploaded an initial sketch for your review.</p><p>Best,<br/>Anuja</p>`,
+          attachments: [{ filename: path.basename(destPath), path: destPath }]
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true, filename: destName });
   } catch (_e) {
     // Fallback to formidable
@@ -63,6 +75,17 @@ export async function POST(req: NextRequest) {
     fs.copyFileSync(file.filepath, destPath);
     db.prepare('INSERT INTO assets (request_id, kind, filename) VALUES (?, ?, ?)').run(requestId, 'sketch', destName);
     db.prepare("UPDATE requests SET status = 'in_progress' WHERE id = ?").run(requestId);
+    try {
+      const reqRow = db.prepare(`SELECT r.*, u.email, u.name FROM requests r JOIN users u ON u.id = r.user_id WHERE r.id = ?`).get(requestId) as any;
+      if (reqRow?.email) {
+        await sendMail({
+          to: reqRow.email,
+          subject: `Your request #${requestId} is now In Progress`,
+          html: `<p>Hi ${reqRow.name || ''},</p><p>Your request <b>#${requestId}</b> is now <b>In Progress</b>. I've uploaded an initial sketch for your review.</p><p>Best,<br/>Anuja</p>`,
+          attachments: [{ filename: path.basename(destPath), path: destPath }]
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true, filename: destName });
   }
 }

@@ -23,6 +23,18 @@ export default function SignupPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, username, email, password })
     });
+    if (res.status === 409) {
+      // Show popup and offer to go to Login
+      const go = typeof window !== 'undefined' && window.confirm('An account with this email/username already exists. Go to Login?');
+      if (go) {
+        window.location.href = `/login?redirect=${encodeURIComponent(redirectTo)}`;
+        return;
+      } else {
+        setError('Email or username already registered');
+      }
+      setLoading(false);
+      return;
+    }
     if (res.ok) {
       window.location.href = redirectTo;
     } else {

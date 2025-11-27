@@ -4,6 +4,8 @@ import { outfitsDir, ensureUploadDirs } from '@/src/lib/uploads';
 import path from 'path';
 import fs from 'fs';
 import { IncomingForm, Files } from 'formidable';
+import { db } from '@/src/lib/db';
+import { sendMail } from '@/src/lib/mailer';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +20,20 @@ export async function POST(req: NextRequest) {
     if (!file) throw new Error('fallback');
     const ab = await (file as any).arrayBuffer();
     const destName = `${Date.now()}_${path.basename((file as any).name || 'outfit.jpg')}`;
-    fs.writeFileSync(path.join(outfitsDir, destName), Buffer.from(ab));
+    const full = path.join(outfitsDir, destName);
+    fs.writeFileSync(full, Buffer.from(ab));
+    try {
+      const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
+      const emails = rows.map(r => r.email).filter(Boolean);
+      if (emails.length) {
+        await sendMail({
+          to: emails,
+          subject: 'New outfit added to Portfolio',
+          html: `<p>A new outfit has been added to the portfolio.</p><p>Visit the Portfolio page to see it, or preview below.</p>`,
+          attachments: [{ filename: destName, path: full }]
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true, filename: destName, url: `/api/uploads?type=outfit&name=${encodeURIComponent(destName)}` });
   } catch {
     const ctype = req.headers.get('content-type') || '';
@@ -38,7 +53,20 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(file)) file = file[0];
     if (!file || !file.filepath) return NextResponse.json({ error: 'Missing file' }, { status: 400 });
     const destName = `${Date.now()}_${path.basename(file.originalFilename || 'outfit.jpg')}`;
-    fs.copyFileSync(file.filepath, path.join(outfitsDir, destName));
+    const full = path.join(outfitsDir, destName);
+    fs.copyFileSync(file.filepath, full);
+    try {
+      const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
+      const emails = rows.map(r => r.email).filter(Boolean);
+      if (emails.length) {
+        await sendMail({
+          to: emails,
+          subject: 'New outfit added to Portfolio',
+          html: `<p>A new outfit has been added to the portfolio.</p><p>Visit the Portfolio page to see it, or preview below.</p>`,
+          attachments: [{ filename: destName, path: full }]
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true, filename: destName, url: `/api/uploads?type=outfit&name=${encodeURIComponent(destName)}` });
   }
 }

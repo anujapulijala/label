@@ -4,6 +4,8 @@ import { designsUploadDir, ensureUploadDirs } from '@/src/lib/uploads';
 import { IncomingForm, Files } from 'formidable';
 import path from 'path';
 import fs from 'fs';
+import { db } from '@/src/lib/db';
+import { sendMail } from '@/src/lib/mailer';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +24,18 @@ export async function POST(req: NextRequest) {
     const destName = `${Date.now()}_${path.basename((file as any).name || 'design.jpg')}`;
     const destPath = path.join(designsUploadDir, destName);
     fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
+    try {
+      const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
+      const emails = rows.map(r => r.email).filter(Boolean);
+      if (emails.length) {
+        await sendMail({
+          to: emails,
+          subject: 'New design added',
+          html: `<p>A new design has been added to the gallery.</p><p>Visit the gallery to see it, or preview below.</p>`,
+          attachments: [{ filename: destName, path: destPath }]
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true, filename: destName, url: `/api/uploads?type=design&name=${encodeURIComponent(destName)}` });
   } catch {
     // Fallback to formidable for older clients
@@ -53,6 +67,18 @@ export async function POST(req: NextRequest) {
     const destName = `${Date.now()}_${path.basename(file.originalFilename || 'design.jpg')}`;
     const destPath = path.join(designsUploadDir, destName);
     fs.copyFileSync(file.filepath, destPath);
+    try {
+      const rows = db.prepare(`SELECT email FROM users WHERE email IS NOT NULL`).all() as { email: string }[];
+      const emails = rows.map(r => r.email).filter(Boolean);
+      if (emails.length) {
+        await sendMail({
+          to: emails,
+          subject: 'New design added',
+          html: `<p>A new design has been added to the gallery.</p><p>Visit the gallery to see it, or preview below.</p>`,
+          attachments: [{ filename: destName, path: destPath }]
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true, filename: destName, url: `/api/uploads?type=design&name=${encodeURIComponent(destName)}` });
   }
 }
