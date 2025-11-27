@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { db } from '@/src/lib/db';
 import { sendMail } from '@/src/lib/mailer';
+import { formidableShimFromRequestHeaders } from '@/src/lib/formidableShim';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,20 +47,10 @@ export async function POST(req: NextRequest) {
     const form = new IncomingForm({ multiples: false, keepExtensions: true });
     const buffer = Buffer.from(await req.arrayBuffer());
     const [fields, files] = await new Promise<[Record<string, any>, Files]>((resolve, reject) => {
-      // @ts-ignore
-      form.parse(
-        Object.assign(new (require('stream').Readable)(), {
-          headers: Object.fromEntries(req.headers),
-          _read() {
-            this.push(buffer);
-            this.push(null);
-          }
-        }),
-        (err: any, fields: Record<string, any>, files: Files) => {
-          if (err) reject(err);
-          else resolve([fields, files]);
-        }
-      );
+      const shim: any = formidableShimFromRequestHeaders(req.headers as any, buffer);
+      form.parse(shim, (err: any, fields: Record<string, any>, files: Files) => {
+        if (err) reject(err); else resolve([fields, files]);
+      });
     });
     let file: any = (files as any).file ?? Object.values(files)[0];
     if (Array.isArray(file)) file = file[0];
