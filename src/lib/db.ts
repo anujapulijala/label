@@ -2,9 +2,9 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
-import { Pool } from 'pg';
+// Lazy-load pg only when DATABASE_URL is set to avoid local installs failing
+let PoolCtor: any = null;
 
-const isPg = !!process.env.DATABASE_URL;
 let sqliteDb: Database | null = null;
 let pgPool: Pool | null = null;
 
@@ -93,7 +93,13 @@ async function initSqlite() {
 }
 
 async function initPg() {
-  pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSLMODE ? { rejectUnauthorized: false } : undefined });
+  if (!PoolCtor) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const req: any = (eval('require') as any);
+    const mod = req('pg');
+    PoolCtor = mod.Pool;
+  }
+  pgPool = new PoolCtor({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSLMODE ? { rejectUnauthorized: false } : undefined });
   const client = await pgPool.connect();
   try {
     await client.query(`
@@ -152,13 +158,27 @@ async function initPg() {
 
 let initPromise: Promise<void> | null = null;
 export async function ensureDb() {
-  if (!initPromise) initPromise = (isPg ? initPg() : initSqlite());
+  if (!initPromise) {
+    initPromise = (async () => {
+      if (process.env.DATABASE_URL) {
+        try {
+          await initPg();
+          return;
+        } catch (_e) {
+          // Fallback to SQLite when pg is not installed/available locally
+          await initSqlite();
+          return;
+        }
+      }
+      await initSqlite();
+    })();
+  }
   return initPromise;
 }
 
 export async function queryOne<T = any>(sql: string, ...params: any[]): Promise<T | null> {
   await ensureDb();
-  if (isPg && pgPool) {
+  if (pgPool) {
     const { rows } = await pgPool.query(toParamSql(sql), params);
     return (rows[0] as T) ?? null;
     }
@@ -168,7 +188,7 @@ export async function queryOne<T = any>(sql: string, ...params: any[]): Promise<
 
 export async function queryMany<T = any>(sql: string, ...params: any[]): Promise<T[]> {
   await ensureDb();
-  if (isPg && pgPool) {
+  if (pgPool) {
     const { rows } = await pgPool.query(toParamSql(sql), params);
     return rows as T[];
   }
@@ -177,7 +197,7 @@ export async function queryMany<T = any>(sql: string, ...params: any[]): Promise
 
 export async function run(sql: string, ...params: any[]): Promise<{ changes: number; lastInsertRowid?: number }> {
   await ensureDb();
-  if (isPg && pgPool) {
+  if (pgPool) {
     const isInsert = /^\s*insert/i.test(sql);
     const finalSql = isInsert && !/returning\s+id/i.test(sql) ? `${sql} RETURNING id` : sql;
     const res = await pgPool.query(toParamSql(finalSql), params);

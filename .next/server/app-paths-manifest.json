@@ -1,13 +1,14 @@
 {
-  "/page": "app/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/portfolio/page": "app/portfolio/page.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/outfits/list/route": "app/api/outfits/list/route.js",
+  "/api/outfits/upload/route": "app/api/outfits/upload/route.js",
+  "/api/uploads/route": "app/api/uploads/route.js",
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
+  "/page": "app/page.js",
   "/login/page": "app/login/page.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
   "/gallery/page": "app/gallery/page.js",
-  "/api/designs/list/route": "app/api/designs/list/route.js",
-  "/portfolio/page": "app/portfolio/page.js",
-  "/api/outfits/list/route": "app/api/outfits/list/route.js",
-  "/reviews/page": "app/reviews/page.js",
-  "/api/reviews/list/route": "app/api/reviews/list/route.js",
-  "/api/auth/logout/route": "app/api/auth/logout/route.js"
+  "/api/designs/list/route": "app/api/designs/list/route.js"
 }
