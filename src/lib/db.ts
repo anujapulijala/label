@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 let PoolCtor: any = null;
 
 let sqliteDb: Database | null = null;
-let pgPool: Pool | null = null;
+let pgPool: any = null;
 
 function toParamSql(sql: string) {
   let i = 0;
