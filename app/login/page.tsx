@@ -1,9 +1,9 @@
 'use client';
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const search = useSearchParams();
   const redirectTo = search.get('redirect') || '/gallery';
@@ -47,6 +47,14 @@ export default function LoginPage() {
         New here? <a href={`/signup?redirect=${encodeURIComponent(redirectTo)}`}>Create an account</a>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="card" style={{ maxWidth: 420, margin: '40px auto' }}>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
 
